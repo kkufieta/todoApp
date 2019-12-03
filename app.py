@@ -44,9 +44,16 @@ class TodoList(db.Model):
 # whenever our user visits this route.
 @app.route('/')
 def index():
+    return redirect(url_for('get_list_todos', list_id=1))
+
+@app.route('/lists/<list_id>')
+def get_list_todos(list_id):
     # Let's create index.html. Flask looks by default for templates in a folder
     # called templates located in our project directory.
-    return render_template('index.html', data=Todo.query.order_by('id').all())
+    return render_template('index.html',
+        lists=TodoList.query.all(),
+        active_list=TodoList.query.get(list_id),
+        todos=Todo.query.filter_by(list_id=list_id).order_by('id').all())
 
 @app.route('/todos/create', methods=['POST'])
 def create_todo():
@@ -54,7 +61,7 @@ def create_todo():
     body = {}
     try:
         description = request.get_json()['description']
-        todo = Todo(description=description)
+        todo = Todo(description=description, list_id=1)
         db.session.add(todo)
         db.session.commit()
         body['description'] = todo.description
